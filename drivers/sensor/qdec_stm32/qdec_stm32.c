@@ -17,6 +17,7 @@
 #include <zephyr/device.h>
 #include <zephyr/init.h>
 #include <zephyr/drivers/sensor.h>
+#include <zephyr/drivers/sensor/qdec_stm32.h>
 #include <zephyr/drivers/pinctrl.h>
 #include <zephyr/drivers/clock_control/stm32_clock_control.h>
 #include <zephyr/logging/log.h>
@@ -40,6 +41,7 @@ struct qdec_stm32_dev_cfg {
 /* Device run time data */
 struct qdec_stm32_dev_data {
 	int32_t position;
+	int32_t raw_count;
 };
 
 static int qdec_stm32_fetch(const struct device *dev, enum sensor_channel chan)
@@ -48,7 +50,8 @@ static int qdec_stm32_fetch(const struct device *dev, enum sensor_channel chan)
 	const struct qdec_stm32_dev_cfg *dev_cfg = dev->config;
 	uint32_t counter_value;
 
-	if ((chan != SENSOR_CHAN_ALL) && (chan != SENSOR_CHAN_ROTATION)) {
+	if ((chan != SENSOR_CHAN_ALL) && (chan != SENSOR_CHAN_ROTATION) &&
+	    (chan != SENSOR_CHAN_RAW_COUNT)) {
 		return -ENOTSUP;
 	}
 
@@ -56,8 +59,16 @@ static int qdec_stm32_fetch(const struct device *dev, enum sensor_channel chan)
 	 * counts_per_revolution. The integer part represents an entire rotation so it
 	 * can be ignored
 	 */
-	counter_value = LL_TIM_GetCounter(dev_cfg->timer_inst) % dev_cfg->counts_per_revolution;
-	dev_data->position = (counter_value * 360) / dev_cfg->counts_per_revolution;
+
+	if ((chan == SENSOR_CHAN_ROTATION) || (chan == SENSOR_CHAN_ALL)) {
+		counter_value =
+			LL_TIM_GetCounter(dev_cfg->timer_inst) % dev_cfg->counts_per_revolution;
+		dev_data->position = (counter_value * 360) / dev_cfg->counts_per_revolution;
+	}
+
+	if ((chan == SENSOR_CHAN_RAW_COUNT) || (chan == SENSOR_CHAN_ALL)) {
+		dev_data->raw_count = LL_TIM_GetCounter(dev_cfg->timer_inst);
+	}
 
 	return 0;
 }
@@ -69,6 +80,9 @@ static int qdec_stm32_get(const struct device *dev, enum sensor_channel chan,
 
 	if (chan == SENSOR_CHAN_ROTATION) {
 		val->val1 = dev_data->position;
+		val->val2 = 0;
+	} else if (chan == SENSOR_CHAN_RAW_COUNT) {
+		val->val1 = dev_data->raw_count;
 		val->val2 = 0;
 	} else {
 		return -ENOTSUP;
