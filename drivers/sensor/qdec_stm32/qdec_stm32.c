@@ -25,6 +25,10 @@
 
 LOG_MODULE_REGISTER(qdec_stm32, CONFIG_SENSOR_LOG_LEVEL);
 
+#define MODE_X2_TI1  0
+#define MODE_X2_TI2  1
+#define MODE_X4_TI12 2
+
 /* Device constant configuration parameters */
 struct qdec_stm32_dev_cfg {
 	const struct pinctrl_dev_config *pin_config;
@@ -32,6 +36,7 @@ struct qdec_stm32_dev_cfg {
 	TIM_TypeDef *timer_inst;
 	bool is_input_polarity_inverted;
 	uint8_t input_filtering_level;
+	uint8_t encoder_mode;
 	uint32_t counts_per_revolution;
 };
 
@@ -61,7 +66,7 @@ static int qdec_stm32_fetch(const struct device *dev, enum sensor_channel chan)
 }
 
 static int qdec_stm32_get(const struct device *dev, enum sensor_channel chan,
-			struct sensor_value *val)
+			  struct sensor_value *val)
 {
 	struct qdec_stm32_dev_data *const dev_data = dev->data;
 
@@ -93,7 +98,7 @@ static int qdec_stm32_initialize(const struct device *dev)
 	}
 
 	retval = clock_control_on(DEVICE_DT_GET(STM32_CLOCK_CONTROL_NODE),
-			     (clock_control_subsys_t)&dev_cfg->pclken);
+				  (clock_control_subsys_t)&dev_cfg->pclken);
 	if (retval < 0) {
 		LOG_ERR("Could not initialize clock");
 		return retval;
@@ -123,6 +128,18 @@ static int qdec_stm32_initialize(const struct device *dev)
 	}
 	LL_TIM_SetAutoReload(dev_cfg->timer_inst, max_counter_value);
 
+	switch (dev_cfg->encoder_mode) {
+	case MODE_X2_TI1:
+		init_props.EncoderMode = LL_TIM_ENCODERMODE_X2_TI1;
+		break;
+	case MODE_X2_TI2:
+		init_props.EncoderMode = LL_TIM_ENCODERMODE_X2_TI2;
+		break;
+	case MODE_X4_TI12:
+		init_props.EncoderMode = LL_TIM_ENCODERMODE_X4_TI12;
+		break;
+	}
+
 	if (LL_TIM_ENCODER_Init(dev_cfg->timer_inst, &init_props) != SUCCESS) {
 		LOG_ERR("Initalization failed");
 		return -EIO;
@@ -138,25 +155,23 @@ static const struct sensor_driver_api qdec_stm32_driver_api = {
 	.channel_get = qdec_stm32_get,
 };
 
-#define QDEC_STM32_INIT(n)								\
-	PINCTRL_DT_INST_DEFINE(n);							\
-	static const struct qdec_stm32_dev_cfg qdec##n##_stm32_config = {		\
-		.pin_config = PINCTRL_DT_INST_DEV_CONFIG_GET(n),			\
-		.timer_inst = ((TIM_TypeDef *)DT_REG_ADDR(DT_INST_PARENT(n))),		\
-		.pclken = {								\
-			.bus = DT_CLOCKS_CELL(DT_INST_PARENT(n), bus),			\
-			.enr = DT_CLOCKS_CELL(DT_INST_PARENT(n), bits)			\
-		},									\
-		.is_input_polarity_inverted = DT_INST_PROP(n, st_input_polarity_inverted),	\
-		.input_filtering_level = DT_INST_PROP(n, st_input_filter_level),		\
-		.counts_per_revolution = DT_INST_PROP(n, st_counts_per_revolution),		\
-	};										\
-											\
-	static struct qdec_stm32_dev_data qdec##n##_stm32_data;				\
-											\
-	SENSOR_DEVICE_DT_INST_DEFINE(n, qdec_stm32_initialize, NULL,			\
-				&qdec##n##_stm32_data, &qdec##n##_stm32_config,		\
-				POST_KERNEL, CONFIG_SENSOR_INIT_PRIORITY,		\
-				&qdec_stm32_driver_api);
+#define QDEC_STM32_INIT(n)                                                                         \
+	PINCTRL_DT_INST_DEFINE(n);                                                                 \
+	static const struct qdec_stm32_dev_cfg qdec##n##_stm32_config = {                          \
+		.pin_config = PINCTRL_DT_INST_DEV_CONFIG_GET(n),                                   \
+		.timer_inst = ((TIM_TypeDef *)DT_REG_ADDR(DT_INST_PARENT(n))),                     \
+		.pclken = {.bus = DT_CLOCKS_CELL(DT_INST_PARENT(n), bus),                          \
+			   .enr = DT_CLOCKS_CELL(DT_INST_PARENT(n), bits)},                        \
+		.is_input_polarity_inverted = DT_INST_PROP(n, st_input_polarity_inverted),         \
+		.input_filtering_level = DT_INST_PROP(n, st_input_filter_level),                   \
+		.encoder_mode = DT_INST_PROP(n, st_encoder_mode),                                  \
+		.counts_per_revolution = DT_INST_PROP(n, st_counts_per_revolution),                \
+	};                                                                                         \
+                                                                                                   \
+	static struct qdec_stm32_dev_data qdec##n##_stm32_data;                                    \
+                                                                                                   \
+	SENSOR_DEVICE_DT_INST_DEFINE(n, qdec_stm32_initialize, NULL, &qdec##n##_stm32_data,        \
+				     &qdec##n##_stm32_config, POST_KERNEL,                         \
+				     CONFIG_SENSOR_INIT_PRIORITY, &qdec_stm32_driver_api);
 
 DT_INST_FOREACH_STATUS_OKAY(QDEC_STM32_INIT)

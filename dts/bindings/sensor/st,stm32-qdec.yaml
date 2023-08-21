@@ -64,6 +64,15 @@ properties:
       - 14 # FDIV32_N6
       - 15 # FDIV32_N8
 
+  st,encoder-mode:
+    type: int
+    description: Encoder mode
+    default: 0
+    enum:
+      - 0 # MODE_X2_TI1
+      - 1 # MODE_X2_TI2
+      - 2 # MODE_X4_TI12
+
   st,counts-per-revolution:
     type: int
     required: true
