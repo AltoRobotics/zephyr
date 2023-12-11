@@ -12,5 +12,6 @@
 enum sensor_channel_qdec_stm32 {
 	SENSOR_CHAN_RAW_COUNT = SENSOR_CHAN_PRIV_START,
 };
+void qdec_stm32_set(const struct device *dev, uint32_t val);
 
 #endif // ZEPHYR_INCLUDE_DRIVERS_SENSOR_QDEV_STM32_H_
