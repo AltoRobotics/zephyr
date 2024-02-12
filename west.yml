@@ -175,16 +175,19 @@ manifest:
       path: modules/hal/infineon
       groups:
         - hal
+        - optional
     - name: hal_intel
       revision: b3b43d4e3da7ba483611bbbea7ef8af92c69df31
       path: modules/hal/intel
       groups:
         - hal
+        - optional
     - name: hal_microchip
       revision: 5d079f1683a00b801373bbbbf5d181d4e33b30d5
       path: modules/hal/microchip
       groups:
         - hal
+        - optional
     - name: hal_nordic
       revision: d054a315eb888ba70e09e5f6decd4097b0276d1f
       path: modules/hal/nordic
@@ -195,11 +198,13 @@ manifest:
       path: modules/hal/nuvoton
       groups:
         - hal
+        - optional
     - name: hal_nxp
       revision: ad142f5612d927e29b1f9606e8edade871b8a526
       path: modules/hal/nxp
       groups:
         - hal
+        - optional
     - name: hal_openisa
       revision: d1e61c0c654d8ca9e73d27fca3a7eb3b7881cb6a
       path: modules/hal/openisa
@@ -216,6 +221,7 @@ manifest:
       revision: a6cf2af9140e014fbbc48d2b6deb802231dd369f
       groups:
         - hal
+        - optional
     - name: hal_rpi_pico
       path: modules/hal/rpi_pico
       revision: fba7162cc7bee06d0149622bbcaac4e41062d368
@@ -226,6 +232,7 @@ manifest:
       path: modules/hal/silabs
       groups:
         - hal
+        - optional
     - name: hal_st
       revision: fb8e79d1a261fd02aadff7c142729f1954163cf3
       path: modules/hal/st
@@ -241,11 +248,13 @@ manifest:
       path: modules/hal/telink
       groups:
         - hal
+        - optional
     - name: hal_ti
       revision: b85f86e51fc4d47c4c383d320d64d52d4d371ae4
       path: modules/hal/ti
       groups:
         - hal
+        - optional
     - name: hal_wurthelektronik
       revision: 24ca9873c3d608fad1fea0431836bc8f144c132e
       path: modules/hal/wurthelektronik
@@ -256,6 +265,7 @@ manifest:
       path: modules/hal/xtensa
       groups:
         - hal
+        - optional
     - name: libmetal
       revision: b91611a6f47dd29fb24c46e5621e797557f80ec6
       path: modules/hal/libmetal
