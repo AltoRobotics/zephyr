@@ -8,6 +8,7 @@
 #include <zephyr/device.h>
 #include <zephyr/drivers/sensor.h>
 #include <zephyr/sys/printk.h>
+#include <zephyr/drivers/sensor/qdec_stm32.h>
 
 #define QUAD_ENC_EMUL_ENABLED \
 	DT_NODE_EXISTS(DT_ALIAS(qenca)) && DT_NODE_EXISTS(DT_ALIAS(qencb))
