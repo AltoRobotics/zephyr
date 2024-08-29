@@ -106,6 +106,14 @@ int main(void)
 		}
 
 		printk("Position = %d degrees\n", val.val1);
+
+		rc = sensor_channel_get(dev, SENSOR_CHAN_RAW_COUNT, &val);
+		if (rc != 0) {
+			printk("Failed to get data (%d)\n", rc);
+			return 0;
+		}
+
+		printk("Raw = %d count\n", val.val1);
 	}
 	return 0;
 }

@@ -17,9 +17,11 @@
 #include <zephyr/device.h>
 #include <zephyr/init.h>
 #include <zephyr/drivers/sensor.h>
+#include <zephyr/drivers/sensor/qdec_stm32.h>
 #include <zephyr/drivers/pinctrl.h>
 #include <zephyr/drivers/clock_control/stm32_clock_control.h>
 #include <zephyr/logging/log.h>
+#include <zephyr/dt-bindings/sensor/qdec_stm32.h>
 
 #include <stm32_ll_tim.h>
 
@@ -30,15 +32,16 @@ struct qdec_stm32_dev_cfg {
 	const struct pinctrl_dev_config *pin_config;
 	struct stm32_pclken pclken;
 	TIM_TypeDef *timer_inst;
-	uint32_t encoder_mode;
 	bool is_input_polarity_inverted;
 	uint8_t input_filtering_level;
+	uint8_t encoder_mode;
 	uint32_t counts_per_revolution;
 };
 
 /* Device run time data */
 struct qdec_stm32_dev_data {
 	int32_t position;
+	int32_t raw_count;
 };
 
 static int qdec_stm32_fetch(const struct device *dev, enum sensor_channel chan)
@@ -47,7 +50,8 @@ static int qdec_stm32_fetch(const struct device *dev, enum sensor_channel chan)
 	const struct qdec_stm32_dev_cfg *dev_cfg = dev->config;
 	uint32_t counter_value;
 
-	if ((chan != SENSOR_CHAN_ALL) && (chan != SENSOR_CHAN_ROTATION)) {
+	if ((chan != SENSOR_CHAN_ALL) && (chan != SENSOR_CHAN_ROTATION) &&
+	    (chan != SENSOR_CHAN_RAW_COUNT)) {
 		return -ENOTSUP;
 	}
 
@@ -55,10 +59,23 @@ static int qdec_stm32_fetch(const struct device *dev, enum sensor_channel chan)
 	 * counts_per_revolution. The integer part represents an entire rotation so it
 	 * can be ignored
 	 */
-	counter_value = LL_TIM_GetCounter(dev_cfg->timer_inst) % dev_cfg->counts_per_revolution;
-	dev_data->position = (counter_value * 360) / dev_cfg->counts_per_revolution;
+	if ((chan == SENSOR_CHAN_ROTATION) || (chan == SENSOR_CHAN_ALL)) {
+		counter_value =
+			LL_TIM_GetCounter(dev_cfg->timer_inst) % dev_cfg->counts_per_revolution;
+		dev_data->position = (counter_value * 360) / dev_cfg->counts_per_revolution;
+	}
+
+	if ((chan == SENSOR_CHAN_RAW_COUNT) || (chan == SENSOR_CHAN_ALL)) {
+		dev_data->raw_count = LL_TIM_GetCounter(dev_cfg->timer_inst);
+	}
 
 	return 0;
+}
+
+void qdec_stm32_set(const struct device *dev, uint32_t val)
+{
+	const struct qdec_stm32_dev_cfg *dev_cfg = dev->config;
+	LL_TIM_SetCounter(dev_cfg->timer_inst, val);
 }
 
 static int qdec_stm32_get(const struct device *dev, enum sensor_channel chan,
@@ -68,6 +85,9 @@ static int qdec_stm32_get(const struct device *dev, enum sensor_channel chan,
 
 	if (chan == SENSOR_CHAN_ROTATION) {
 		val->val1 = dev_data->position;
+		val->val2 = 0;
+	} else if (chan == SENSOR_CHAN_RAW_COUNT) {
+		val->val1 = dev_data->raw_count;
 		val->val2 = 0;
 	} else {
 		return -ENOTSUP;
@@ -108,8 +128,6 @@ static int qdec_stm32_initialize(const struct device *dev)
 
 	LL_TIM_ENCODER_StructInit(&init_props);
 
-	init_props.EncoderMode = dev_cfg->encoder_mode;
-
 	if (dev_cfg->is_input_polarity_inverted) {
 		init_props.IC1Polarity = LL_TIM_IC_POLARITY_FALLING;
 		init_props.IC2Polarity = LL_TIM_IC_POLARITY_FALLING;
@@ -125,6 +143,18 @@ static int qdec_stm32_initialize(const struct device *dev)
 		max_counter_value = UINT16_MAX - (UINT16_MAX % dev_cfg->counts_per_revolution) - 1;
 	}
 	LL_TIM_SetAutoReload(dev_cfg->timer_inst, max_counter_value);
+
+	switch (dev_cfg->encoder_mode) {
+	case MODE_X2_TI1:
+		init_props.EncoderMode = LL_TIM_ENCODERMODE_X2_TI1;
+		break;
+	case MODE_X2_TI2:
+		init_props.EncoderMode = LL_TIM_ENCODERMODE_X2_TI2;
+		break;
+	case MODE_X4_TI12:
+		init_props.EncoderMode = LL_TIM_ENCODERMODE_X4_TI12;
+		break;
+	}
 
 	if (LL_TIM_ENCODER_Init(dev_cfg->timer_inst, &init_props) != SUCCESS) {
 		LOG_ERR("Initalization failed");
