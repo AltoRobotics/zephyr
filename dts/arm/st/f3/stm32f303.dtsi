@@ -23,10 +23,10 @@
 			#size-cells = <0>;
 			reg = <0x40005800 0x400>;
 			clocks = <&rcc STM32_CLOCK_BUS_APB1 0x00400000>,
-				 /* I2C clock source should always be defined,
-				  * even for the default value
-				  */
-				 <&rcc STM32_SRC_SYSCLK I2C2_SEL(1)>;
+					 /* I2C clock source should always be defined,
+					  * even for the default value
+					  */
+					 <&rcc STM32_SRC_SYSCLK I2C2_SEL(1)>;
 			interrupts = <33 0>, <34 0>;
 			interrupt-names = "event", "error";
 			status = "disabled";
@@ -86,6 +86,12 @@
 				compatible = "st,stm32-pwm";
 				status = "disabled";
 				#pwm-cells = <3>;
+			};
+
+			qdec {
+				compatible = "st,stm32-qdec";
+				status = "disabled";
+				st,input-filter-level = <NO_FILTER>;
 			};
 		};
 
@@ -160,9 +166,9 @@
 			vref-mv = <3000>;
 			#io-channel-cells = <1>;
 			resolutions = <STM32_ADC_RES(12, 0x00)
-				       STM32_ADC_RES(10, 0x01)
-				       STM32_ADC_RES(8, 0x02)
-				       STM32_ADC_RES(6, 0x03)>;
+			STM32_ADC_RES(10, 0x01)
+			STM32_ADC_RES(8, 0x02)
+			STM32_ADC_RES(6, 0x03)>;
 			sampling-times = <2 3 5 8 20 62 182 602>;
 			st,adc-sequencer = <FULLY_CONFIGURABLE>;
 		};
@@ -176,9 +182,9 @@
 			vref-mv = <3000>;
 			#io-channel-cells = <1>;
 			resolutions = <STM32_ADC_RES(12, 0x00)
-				       STM32_ADC_RES(10, 0x01)
-				       STM32_ADC_RES(8, 0x02)
-				       STM32_ADC_RES(6, 0x03)>;
+			STM32_ADC_RES(10, 0x01)
+			STM32_ADC_RES(8, 0x02)
+			STM32_ADC_RES(6, 0x03)>;
 			sampling-times = <2 3 5 8 20 62 182 602>;
 			st,adc-sequencer = <FULLY_CONFIGURABLE>;
 		};
