@@ -53,27 +53,6 @@ manifest:
       path: modules/fs/fatfs
       groups:
         - fs
-    - name: hal_espressif
-      revision: 87e7902d7184a8280b4d13bce79801a723f4ddd8
-      path: modules/hal/espressif
-      west-commands: west/west-commands.yml
-      groups:
-        - hal
-    - name: hal_nordic
-      revision: ab5cb2e2faeb1edfad7a25286dcb513929ae55da
-      path: modules/hal/nordic
-      groups:
-        - hal
-    - name: hal_rpi_pico
-      path: modules/hal/rpi_pico
-      revision: fba7162cc7bee06d0149622bbcaac4e41062d368
-      groups:
-        - hal
-    - name: hal_silabs
-      revision: a09dd1b82b24aa3060e162c0dfa40026c0dba450
-      path: modules/hal/silabs
-      groups:
-        - hal
     - name: hal_st
       revision: b77157f6bc4395e398d90ab02a7d2cbc01ab2ce7
       path: modules/hal/st
@@ -84,30 +63,11 @@ manifest:
       path: modules/hal/stm32
       groups:
         - hal
-    - name: hal_telink
-      revision: 4226c7fc17d5a34e557d026d428fc766191a0800
-      path: modules/hal/telink
-      groups:
-        - hal
-    - name: hal_ti
-      revision: b85f86e51fc4d47c4c383d320d64d52d4d371ae4
-      path: modules/hal/ti
-      groups:
-        - hal
     - name: hal_wurthelektronik
       revision: e5bcb2eac1bb9639ce13b4dafc78eb254e014342
       path: modules/hal/wurthelektronik
       groups:
         - hal
-    - name: hal_xtensa
-      revision: a2d658525b16c57bea8dd565f5bd5167e4b9f1ee
-      path: modules/hal/xtensa
-      groups:
-        - hal
-    - name: hostap
-      repo-path: hostap
-      path: modules/lib/hostap
-      revision: a90df86d7c596a5367ff70c2b50c7f599e6636f3
     - name: libmetal
       revision: a6851ba6dba8c9e87d00c42f171a822f7a29639b
       path: modules/hal/libmetal
